@@ -13,7 +13,6 @@ The following pre-requisites are required to start developing the EDP445 backend
 To check if Python is installed (Make sure the correct version is installed):
 ```
 python --version
-
 ```
 To check if pip is installed:
 ```
