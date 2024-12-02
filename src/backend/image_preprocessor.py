@@ -9,7 +9,7 @@ class NormalizedImageDataStream:
         self.dataSource = source
         self.files = [f for f in filter(lambda filename: filename.endswith(".nidat"), os.listdir(source.dir))]
 
-    def next(self) -> tuple[str, list[float]]:
+    def __iter__(self) -> tuple[str, list[float]]:
         filename = self.files.pop(0)
 
         with open(os.path.join(self.source.dir, filename), "rb") as datafile:
@@ -26,7 +26,7 @@ class RawImageDataStream:
         self.dataSource = source
         self.files = filter(lambda filename: filename.endswith(".ridat"), os.listdir(source.dir))
     
-    def next(self) -> list[float]:
+    def __iter__(self) -> list[float]:
         filename = self.files.pop(0)
 
         with open(os.path.join(self.source.dir, filename), "rb") as datafile:
@@ -68,6 +68,11 @@ class ImagePreprocessor:
 
         pass
 
+    def getAllRawImageData(self) -> RawImageDataStream:
+        '''Retrieves raw image data contained in all raw image data files (.ridat) within the preprocessor's working directory in the form of a datastream.'''
+
+        return RawImageDataStream(self)
+
     def generateDataAverageFile(self):
         '''Generates an average pixel data file (.apdat) for all image files within the preprocessor's working directory.'''
 
@@ -107,6 +112,11 @@ class ImagePreprocessor:
         '''Deletes all normalized data files (.nidat) within the preprocessor's working directory.'''
 
         pass
+
+    def getAllNormalizedData(self) -> NormalizedImageDataStream:
+        '''Retrieves normalized image data contained in all normalized image data files (.nidat) within the preprocessor's working directory in the form of a datastream.'''
+
+        return NormalizedImageDataStream(self)
 
     def preprocess(self):
         '''Generates normalized data files (.nidat) for all image files and an average pixel data file (.apdat).'''
