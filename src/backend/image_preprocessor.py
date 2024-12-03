@@ -14,11 +14,12 @@ class NormalizedImageDataStream:
         return self
 
     def __next__(self) -> tuple[str, list[float]]:
+        if (len(self.files) == 0): raise StopIteration
         self.currentFile = self.files.pop(0)
 
-        with open(os.path.join(self.source.directory, self.currentFile), "rb") as datafile:
+        with open(os.path.join(self.dataSource.directory, self.currentFile), "rb") as datafile:
             raw = datafile.read()
-            dataSize = self.dataSource.targetDimenstion[0] * self.dataSource.targetDimension[1]
+            dataSize = self.dataSource.targetDimension[0] * self.dataSource.targetDimension[1]
             self.currentData = list(struct.unpack('f' * dataSize, raw))
 
             return self.currentFile, self.currentData
@@ -28,23 +29,27 @@ class RawImageDataStream:
 
     def __init__(self, source):
         self.dataSource = source
-        self.files = filter(lambda filename: filename.endswith(".ridat"), os.listdir(source.directory))
+        self.files = [f for f in filter(lambda filename: filename.endswith(".ridat"), os.listdir(source.directory))]
     
     def __iter__(self):
         return self
 
-    def __next__(self) -> list[float]:
+    def __next__(self) -> tuple[str, list[float]]:
+        if (len(self.files) == 0): raise StopIteration
         self.currentFile = self.files.pop(0)
 
-        with open(os.path.join(self.source.directory, self.currentFile), "rb") as datafile:
+        with open(os.path.join(self.dataSource.directory, self.currentFile), "rb") as datafile:
             raw = datafile.read()
-            dataSize = self.dataSource.targetDimenstion[0] * self.dataSource.targetDimension[1]
+            dataSize = self.dataSource.targetDimension[0] * self.dataSource.targetDimension[1]
             self.currentData = list(struct.unpack('f' * dataSize, raw))
 
             return self.currentFile, self.currentData
 
 class ImagePreprocessor:
     '''Preprocessor for a specified image dimension and working directory. Used to get preprocessed image data.'''
+
+    targetDimension : tuple[int, int]
+    directory : str
 
     def __init__(self, dimension : tuple[int, int], dir : str):
         self.targetDimension = dimension
@@ -68,12 +73,12 @@ class ImagePreprocessor:
     def generateRawImageDataFile(self, filename : str):
         '''Generates a raw image data file (.ridat) for the specified file in the preprocessor's working directory.'''
 
-        filepath = os.path.join(self.dir, filename)
+        filepath = os.path.join(self.directory, filename)
 
         with Image.open(filepath) as imageFile:
             resizedImage = imageFile.resize(self.targetDimension)
             rawData = np.array([list(resizedImage.getdata(0)), list(resizedImage.getdata(1)), list(resizedImage.getdata(2))])
-            blackwhiteData = np.multiply([0.2989, 0.5870, 0.1140], rawData)
+            blackwhiteData = np.matmul([0.2989, 0.5870, 0.1140], rawData)
 
             with open(filepath + ".ridat", "wb") as outputFile:
                 outputFile.write(struct.pack("f" * self.targetDimension[0] * self.targetDimension[1], *blackwhiteData))
@@ -81,13 +86,13 @@ class ImagePreprocessor:
     def cleanRawImageDataFile(self, filename : str):
         '''Deletes the corresponding raw image data file (.ridat) of a specified file within the preprocessor's working directory.'''
 
-        filepath = os.path.join(self.dir, filename + ".ridat")
+        filepath = os.path.join(self.directory, filename + ".ridat")
         if os.path.exists(filepath): os.remove(filepath)
 
     def getRawImageData(self, filename : str) -> list[float]:
         '''Retrieves the raw image data contained in the raw image data file (.ridat) of a specified file within the preprocessor's working directory.'''
 
-        filepath = os.path.join(self.dir, filename + ".ridat")
+        filepath = os.path.join(self.directory, filename + ".ridat")
 
         with open(filepath, "rb") as file:
             return list(struct.unpack("f" * self.targetDimension[0] * self.targetDimension[1], file.read()))
@@ -102,7 +107,7 @@ class ImagePreprocessor:
         '''Deletes all raw image data files (.ridat) within the preprocessor's working directory.'''
 
         for ridatFile in self.getAllFiles(".ridat"):
-            os.remove(ridatFile)
+            os.remove(os.path.join(self.directory, ridatFile))
 
     def getAllRawImageData(self) -> RawImageDataStream:
         '''Retrieves raw image data contained in all raw image data files (.ridat) within the preprocessor's working directory in the form of a datastream.'''
@@ -116,7 +121,7 @@ class ImagePreprocessor:
         dataCount = 0
         ridatFiles = self.getAllRawImageData()
 
-        for pixelData in ridatFiles:
+        for _, pixelData in ridatFiles:
             dataCount += 1
             dataSum = np.add(dataSum, pixelData)
         
@@ -124,18 +129,21 @@ class ImagePreprocessor:
         
         dataAverage = np.divide(dataSum, dataCount)
 
-        with open("average.apdat", "wb") as file:
+        filepath = os.path.join(self.directory, "imgaverage.apdat")
+        with open(filepath, "wb") as file:
             file.write(struct.pack("f" * self.targetDimension[0] * self.targetDimension[1], *dataAverage))
 
     def cleanDataAverageFile(self):
         '''Deletes the average pixel data file (.apdat) within the preprocessor's working directory.'''
 
-        if os.path.exists("average.apdat"): os.remove("average.apdat")
+        filepath = os.path.join(self.directory, "imgaverage.apdat")
+        if os.path.exists(filepath): os.remove(filepath)
 
     def getDataAverage(self) -> list[float]:
         '''Retrieves the average pixel data form the average pixel data file (.apdat) within the preprocessor's working directory.'''
 
-        with open("average.apdat", "rb") as file:
+        filepath = os.path.join(self.directory, "imgaverage.apdat")
+        with open(filepath, "rb") as file:
             return list(struct.unpack("f" * self.targetDimension[0] * self.targetDimension[1], file.read()))
 
     def generateNormalizedDataFile(self, filename : str):
@@ -143,13 +151,13 @@ class ImagePreprocessor:
 
         filepath = os.path.join(self.directory, filename)
 
-        if not os.path.exists(filepath + ".nidat"): return
+        if not os.path.exists(filepath + ".ridat"): return
 
         denormalizedData = self.getRawImageData(filename)
         averageData = self.getDataAverage()
         normalizedData = np.subtract(denormalizedData, averageData)
 
-        with open(filename + ".nidat", "wb") as nidatFile:
+        with open(filepath + ".nidat", "wb") as nidatFile:
             nidatFile.write(struct.pack("f" * self.targetDimension[0] * self.targetDimension[1], *normalizedData))
 
     def cleanNormalizedDataFile(self, filename : str):
@@ -163,7 +171,7 @@ class ImagePreprocessor:
 
         filepath = os.path.join(self.directory, filename + ".nidat")
 
-        with open(filepath) as file:
+        with open(filepath, "rb") as file:
             return struct.unpack("f" * self.targetDimension[0] * self.targetDimension[1], file.read())
 
     def generateNormalizedDataFiles(self):
@@ -177,7 +185,7 @@ class ImagePreprocessor:
         '''Deletes all normalized data files (.nidat) within the preprocessor's working directory.'''
 
         for nidatFile in self.getAllFiles(".nidat"):
-            os.remove(nidatFile)
+            os.remove(os.path.join(self.directory, nidatFile))
 
     def getAllNormalizedData(self) -> NormalizedImageDataStream:
         '''Retrieves normalized image data contained in all normalized image data files (.nidat) within the preprocessor's working directory in the form of a datastream.'''
