@@ -1,4 +1,5 @@
 import struct
+from signal_processing import *
 from musicdata import Note, MusicData
 
 def DecodeWaveFile(filepath : str) -> MusicData:
@@ -20,17 +21,27 @@ def DecodeWave(data : bytes) -> MusicData:
     if fmtBlockAlign != fmtNumChannels * fmtBitsPerSample // 8: return
     if fmtByteRate != fmtBlockAlign * fmtSampleRate: return
 
-    dataChunckId, dataChuckSize = struct.unpack("4sI", data[36:44])
-    if dataChunckId != b"data": return
+    dataOffset = 36
 
-    rawAudioData = []
+    chunckId, chunckSize = struct.unpack("4sI", data[dataOffset:(dataOffset + 8)])
+    while chunckId != b"data":
+        if (dataOffset >= len(data) - 8):
+            return None
 
-    for i in range(dataChuckSize // fmtBlockAlign):
+        dataOffset += 8 + chunckSize
+        chunckId, chunckSize = struct.unpack("4sI", data[dataOffset:(dataOffset + 8)])
+
+    dataOffset += 8
+    dataChunckSize = chunckSize
+
+    rawAudioData = [0 for _ in range(dataChunckSize // fmtBlockAlign)]
+
+    for i in range(dataChunckSize // fmtBlockAlign):
         sum = 0
 
         for j in range(fmtNumChannels):
             bytesPerSample = fmtBitsPerSample // 8
-            startByte = 44 + i * fmtBlockAlign + j * bytesPerSample
+            startByte = dataOffset + i * fmtBlockAlign + j * bytesPerSample
             sum += int.from_bytes(data[startByte:(startByte + bytesPerSample)], byteorder="little", signed=True)
         
         avg = sum / fmtNumChannels
@@ -40,4 +51,4 @@ def DecodeWave(data : bytes) -> MusicData:
         else:
             avg -= 128
 
-        rawAudioData.append(avg)
+        rawAudioData[i] = avg
