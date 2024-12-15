@@ -1,59 +1,64 @@
+import os
+import json
 import numpy as np
-from image_preprocessor import ImagePreprocessor 
+from PIL import Image
+from backend.image_preprocessor import ImagePreprocessor
 
-class ImageProcessor:
-    def __init__(self, folderpath, target_dim=(64, 64)):
-        self.directory = folderpath
-        self.preprocessor = ImagePreprocessor(target_dim, folderpath)
-        self.mean = None
-        self.pca_components = None
+class ImageProcessor(ImagePreprocessor):
+    '''Performs PCA with SVD and similarity calculation for images.'''
 
-    def PCAEigenVec(self, X, num_components=3):
-        N = X.shape[0]
-        self.mean = np.mean(X, axis=0)
-        centered_X = X - self.mean 
-        covariance = (1 / N) * np.dot(centered_X.T, centered_X)
-        _, _, VT = np.linalg.svd(covariance)
-        self.pca_components = VT[:num_components, :].T
-        return self.pca_components
+    def __init__(self, dimension: tuple[int, int], dir: str, k: int):
+        '''Initialize with dimension, directory, and number of principal components (k).'''
+        super().__init__(dimension, dir)
+        self.k = k  
+        self.mean_vector = None
+        self.U_k = None  
+        self.Z = None  
+        self.mapper = {}  
 
-    def PCAMatrix(self, X):
-        centeredX = X - self.mean
-        reducedX = np.dot(centered_X, self.pca_components)
-        return reduced_X
+    def load(self, folderpath: str):
+        '''Load mapper.json and prepare data matrix Z.'''
+        mapper_path = os.path.join(folderpath, 'mapper.json')
+        with open(mapper_path, 'r') as file:
+            self.mapper = json.load(file)
 
-    def process(self, query_vector):
-        preprocessed = self.preprocessor.getAllNormalizedData()
-        filenames = []
-        vectors = []
-        for filename, data in preprocessed:
-            filenames.append(filename)
-            vectors.append(data)
-        vectors = np.array(vectors)
-        reduced_vectors = self.PCAMatrix(vectors)
-        reduced_query = np.dot(query_vector - self.mean, self.pca_components)
-        similarities = []
-        for i, vec in enumerate(reduced_vectors):
-            euclidean_dist = np.linalg.norm(reduced_query - vec)
-            similarities.append((filenames[i], euclidean_dist))
-        similarities.sort(key=lambda x: x[1])
-        return similarities  
+        print("Mapper loaded. Processing images...")
+        all_data = []
+        self.generateRawImageDataFiles()
+        self.generateDataAverageFile()
+        self.generateNormalizedDataFiles()
 
-preprocessor = ImagePreprocessor((64, 64), "test")
-preprocessor.preprocess()
-processor = ImageProcessor("test")
-normalized_data = []
-filenames = []
+        for filename, _ in self.mapper.items():
+            normalized_data = self.getNormalizedData(filename.removesuffix('.png'))
+            all_data.append(normalized_data)
 
-for filename, data in preprocessor.getAllNormalizedData():
-    filenames.append(filename)
-    normalized_data.append(data)
+        X = np.array(all_data)
+        self.mean_vector = np.mean(X, axis=0)
+        X_centered = X - self.mean_vector
 
-normalized_data = np.array(normalized_data)
-processor.PCAEigenVec(normalized_data)
-query_vector = normalized_data[0] 
+        U, S, VK = np.linalg.svd(X_centered, full_matrices=False)
+        self.U_k = VK[:self.k].T  
+        self.Z = np.dot(X_centered, self.U_k)  
 
-similarities = processor.process(query_vector)
+        print("Data loaded and projected into PCA space.")
 
-for filename, distance in similarities[:5]: 
-    print(f"{filename}")
+    def search(self, filepath: str):
+        '''Search for the most similar images to the given file.'''
+        query_name = os.path.basename(filepath).removesuffix('.png')
+        self.generateRawImageDataFile(filepath)
+        self.generateNormalizedDataFile(query_name)
+        query_data = self.getNormalizedData(query_name)
+
+        query_projection = np.dot(query_data - self.mean_vector, self.U_k)
+
+        distances = []
+        for i, (filename, _) in enumerate(self.mapper.items()):
+            distance = np.linalg.norm(query_projection - self.Z[i])
+            distances.append((filename, distance))
+
+        distances.sort(key=lambda x: x[1])
+
+        print("Hasil pencarian terdekat:")
+        for filename, distance in distances[:5]:
+            print(f"{filename}: Jarak = {distance:.4f}")
+        return distances[:5]
