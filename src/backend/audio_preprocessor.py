@@ -27,7 +27,6 @@ class AudioPreprocessor:
         with open(map_file_path, 'r') as f:
             map_list = json.load(f)
             audio_list = [item['audio_file'] for item in map_list]
-            print(audio_list)
         return audio_list
     
     def load_audiodb(audiodb_folder_path, audiodb_file_name):
