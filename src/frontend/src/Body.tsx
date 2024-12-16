@@ -25,10 +25,12 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
             const height = musicListRef.current.offsetHeight
 
             const cardWidth = 12 * parseFloat(getComputedStyle(document.documentElement).fontSize)
-            const cardHeight = 24 * parseFloat(getComputedStyle(document.documentElement).fontSize)
+            const cardHeight = 16 * parseFloat(getComputedStyle(document.documentElement).fontSize)
 
             const colCount = Math.floor(width / cardWidth)
             const rowCount = Math.floor(height / cardHeight)
+
+            console.log(`${colCount}, ${rowCount}`)
             
             const newPageSize = colCount * rowCount
             const newPageOffset = pageOffset / newPageSize
@@ -38,6 +40,8 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
         }
 
         window.addEventListener('resize', onResize)
+
+        onResize()
 
         return () => {
             window.removeEventListener('resize', onResize)
@@ -59,18 +63,18 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
                 <div className="flex flex-col h-full w-24 content-center justify-center">
                     <button
                         className="text-white"
-                        onClick={() => {setPageOffset(pageOffset + pageSize)}}
-                        disabled={pageOffset + pageSize > musicCountRef.current}
+                        onClick={() => {setPageOffset(Math.max(pageOffset - pageSize, 0))}}
+                        disabled={pageOffset <= 0}
                     >
                         Prev
                     </button>
                 </div>
-                <MusicList musicList={musicList} musicCallback={musicCallback} className="flex-grow flex justify-center items-center h-full" ref={musicListRef}/>
+                <MusicList musicList={musicList} musicCallback={musicCallback} className="flex-grow flex flex-wrap justify-center items-center h-full" ref={musicListRef}/>
                 <div className="flex flex-col h-full w-24 content-center justify-center">
                     <button
                         className="text-white"
-                        onClick={() => {setPageOffset(Math.max(pageOffset - pageSize, 0))}}
-                        disabled={pageOffset <= 0}
+                        onClick={() => {setPageOffset(pageOffset + pageSize)}}
+                        disabled={pageOffset + pageSize >= musicCountRef.current}
                     >
                         Next
                     </button>
