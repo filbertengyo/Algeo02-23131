@@ -12,14 +12,34 @@ for (i = 0; i < testdata.length; i++) {
     }
 }
 
-export function GetMusic(offset: number): Music {
+export async function GetMusic(offset: number) {
     return testdata[offset]
 }
 
-export function GetMusicList(query: string, offset: number, count: number) {
+export async function GetMusicList(query: string, offset: number, count: number) {
     return testdata.filter((music) => music.name.startsWith(query)).slice(offset, offset + count)
 }
 
-export function GetMusicCount(query: string) {
+export async function GetMusicCount(query: string) {
     return testdata.filter((music) => music.name.startsWith(query)).length
+}
+
+export async function GetQueryResult(offset: number, count: number) {
+
+}
+
+export async function GetQueryCount() {
+
+}
+
+export async function UpdateDataset(file: File) {
+
+}
+
+export async function QueryImage(file: File) {
+    return 1
+}
+
+export async function QueryAudio(file: File) {
+    return 0
 }

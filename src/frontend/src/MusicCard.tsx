@@ -18,6 +18,12 @@ export default function MusicCard({ music, musicCallback }: MusicCardProps) {
                     Play
                 </button>
             </div>
+            {(
+                music.similarity &&
+                <div className="flex-grow text-base text-white">
+                    {`Similarity: ${music.similarity}`}
+                </div>
+            )}
         </div>
     )
 }

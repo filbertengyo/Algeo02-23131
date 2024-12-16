@@ -8,15 +8,15 @@ importers:
 
   .:
     dependencies:
+      '@lottielab/lottie-player':
+        specifier: ^1.1.2
+        version: 1.1.2(react@18.3.1)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      lottie-react:
-        specifier: ^2.4.0
-        version: 2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       lucide-react:
         specifier: ^0.462.0
         version: 0.462.0(react@18.3.1)
@@ -393,6 +393,14 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
+
+  '@lottielab/lottie-player@1.1.2':
+    resolution: {integrity: sha512-i+Q8b4AZtekicMT+RWiHLPyM31EldeumUsVjZV7A5CsXYGUhVJfB90yTmpY2/QqyqvkGkjvfZKQNCDhTkxs38A==}
+    peerDependencies:
+      react: '>=16.8.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -1031,14 +1039,9 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
-  lottie-react@2.4.0:
-    resolution: {integrity: sha512-pDJGj+AQlnlyHvOHFK7vLdsDcvbuqvwPZdMlJ360wrzGFurXeKPr8SiRCjLf3LrNYKANQtSsh5dz9UYQHuqx4w==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
-
-  lottie-web@5.12.2:
-    resolution: {integrity: sha512-uvhvYPC8kGPjXT3MyKMrL3JitEAmDMp30lVkuq/590Mw9ok6pWcFCwXJveo0t5uqYw1UREQHofD+jVpdjBv8wg==}
+  lottie-web@https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354:
+    resolution: {tarball: https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354}
+    version: 5.12.2
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -1756,6 +1759,12 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
+  '@lottielab/lottie-player@1.1.2(react@18.3.1)':
+    dependencies:
+      lottie-web: https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354
+    optionalDependencies:
+      react: 18.3.1
+
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
       '@nodelib/fs.stat': 2.0.5
@@ -2376,13 +2385,7 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
-  lottie-react@2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      lottie-web: 5.12.2
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
-  lottie-web@5.12.2: {}
+  lottie-web@https://codeload.github.com/lottielab/lottie-web/tar.gz/c671e8eaefb95099fdb126d2fc68a566327e4354: {}
 
   lru-cache@10.4.3: {}
 
