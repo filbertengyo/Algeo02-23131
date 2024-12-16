@@ -29,8 +29,6 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
 
             const colCount = Math.floor(width / cardWidth)
             const rowCount = Math.floor(height / cardHeight)
-
-            console.log(`${colCount}, ${rowCount}`)
             
             const newPageSize = colCount * rowCount
             const newPageOffset = pageOffset / newPageSize
@@ -50,6 +48,10 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
 
     useEffect(() => {
         setPageOffset(0)
+        if (pageOffset === 0) {
+            setMusicList(GetMusicList(query || "", 0, pageSize))
+            musicCountRef.current = GetMusicCount(query || "")
+        }
     }, [query])
 
     useEffect(() => {
@@ -60,7 +62,7 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
     return (
         <div className={className}>
             <div className="flex w-full h-full gap-2">
-                <div className="flex flex-col h-full w-24 content-center justify-center">
+                <div className="flex flex-col h-full w-20 min-w-20 content-center justify-center">
                     <button
                         className="text-white"
                         onClick={() => {setPageOffset(Math.max(pageOffset - pageSize, 0))}}
@@ -70,7 +72,7 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
                     </button>
                 </div>
                 <MusicList musicList={musicList} musicCallback={musicCallback} className="flex-grow flex flex-wrap justify-center items-center h-full" ref={musicListRef}/>
-                <div className="flex flex-col h-full w-24 content-center justify-center">
+                <div className="flex flex-col h-full w-20 min-w-20 content-center justify-center">
                     <button
                         className="text-white"
                         onClick={() => {setPageOffset(pageOffset + pageSize)}}

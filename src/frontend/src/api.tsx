@@ -17,10 +17,9 @@ export function GetMusic(offset: number): Music {
 }
 
 export function GetMusicList(query: string, offset: number, count: number) {
-    console.log(`${offset} - ${offset + count}`)
-    return testdata.slice(offset, offset + count)
+    return testdata.filter((music) => music.name.startsWith(query)).slice(offset, offset + count)
 }
 
 export function GetMusicCount(query: string) {
-    return testdata.length
+    return testdata.filter((music) => music.name.startsWith(query)).length
 }
