@@ -8,7 +8,7 @@ interface MusicListProps {
     className?: string
 }
 
-const MusicList = forwardRef<HTMLDivElement, MusicListProps>(({musicList, musicCallback, className}: MusicListProps, ref?) => {
+const MusicList = forwardRef<HTMLDivElement, MusicListProps>(({ musicList, musicCallback, className }: MusicListProps, ref?) => {
     return (
         <div className={className} ref={ref}>
             {

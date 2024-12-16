@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import Music from "./Music";
 import MusicList from "./MusicList";
-import { GetMusicCount, GetMusicList } from "./api";
+import { GetMusicCount, GetMusicList, GetQueryResult } from "./api";
 
 
 interface BodyProps {
     query?: string
     musicCallback?: (music: Music) => void
     className?: string
+    result?: boolean
 }
 
-export default function Body({ query, musicCallback, className }: BodyProps) {
+export default function Body({ query, musicCallback, className, result }: BodyProps) {
     const [pageSize, setPageSize] = useState(0)
     const [pageOffset, setPageOffset] = useState(0)
     const [musicList, setMusicList] = useState<Music[]>([])
@@ -49,14 +50,24 @@ export default function Body({ query, musicCallback, className }: BodyProps) {
     useEffect(() => {
         setPageOffset(0)
         if (pageOffset === 0) {
-            setMusicList(GetMusicList(query || "", 0, pageSize))
-            musicCountRef.current = GetMusicCount(query || "")
+            if (result) {
+                GetQueryResult(0, pageSize).then((res) => {setMusicList(res)})
+                GetMusicCount().then((res) => {musicCountRef.current = res})
+            } else {
+                GetMusicList(query || "", 0, pageSize).then((res) => {setMusicList(res)})
+                GetMusicCount(query || "").then((res) => {musicCountRef.current = res})
+            }
         }
     }, [query])
 
     useEffect(() => {
-        setMusicList(GetMusicList(query || "", pageOffset, pageSize))
-        musicCountRef.current = GetMusicCount(query || "")
+        if (result) {
+            GetQueryResult(0, pageSize).then((res) => {setMusicList(res)})
+            GetMusicCount().then((res) => {musicCountRef.current = res})
+        } else {
+            GetMusicList(query || "", 0, pageSize).then((res) => {setMusicList(res)})
+            GetMusicCount(query || "").then((res) => {musicCountRef.current = res})
+        }
     }, [pageSize, pageOffset])
 
     return (
