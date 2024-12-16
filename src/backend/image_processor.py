@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import time
 from PIL import Image
 from backend.image_preprocessor import ImagePreprocessor
 
@@ -22,14 +23,13 @@ class ImageProcessor(ImagePreprocessor):
         with open(mapper_path, 'r') as file:
             self.mapper = json.load(file)
 
-        print("Mapper loaded. Processing images...")
         all_data = []
         self.generateRawImageDataFiles()
         self.generateDataAverageFile()
         self.generateNormalizedDataFiles()
 
         for filename, _ in self.mapper.items():
-            normalized_data = self.getNormalizedData(filename.removesuffix('.png'))
+            normalized_data = self.getNormalizedData(self._strip_extension(filename))
             all_data.append(normalized_data)
 
         X = np.array(all_data)
@@ -40,14 +40,12 @@ class ImageProcessor(ImagePreprocessor):
         self.U_k = VK[:self.k].T  
         self.Z = np.dot(X_centered, self.U_k)  
 
-        print("Data loaded and projected into PCA space.")
-
     def search(self, filepath: str):
-        '''Search for the most similar images to the given file.'''
-        query_name = os.path.basename(filepath).removesuffix('.png')
+        '''Search for the most similar images to the given file and return the duration.'''
+        query_name = os.path.basename(filepath)
         self.generateRawImageDataFile(filepath)
-        self.generateNormalizedDataFile(query_name)
-        query_data = self.getNormalizedData(query_name)
+        self.generateNormalizedDataFile(self._strip_extension(query_name))
+        query_data = self.getNormalizedData(self._strip_extension(query_name))
 
         query_projection = np.dot(query_data - self.mean_vector, self.U_k)
 
@@ -58,7 +56,11 @@ class ImageProcessor(ImagePreprocessor):
 
         distances.sort(key=lambda x: x[1])
 
-        print("Hasil pencarian terdekat:")
         for filename, distance in distances[:5]:
             print(f"{filename}: Jarak = {distance:.4f}")
+
         return distances[:5]
+
+    def _strip_extension(self, filename: str):
+        '''Remove the file extension for normalized data processing.'''
+        return os.path.splitext(filename)[0]
