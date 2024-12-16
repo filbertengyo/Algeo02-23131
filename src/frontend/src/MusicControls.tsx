@@ -70,7 +70,7 @@ export default function MusicControls({ source, className }: MusicProps) {
         <div className={className}>
             <div className="flex flex-col gap-2 flex-grow h-full justify-center items-center">
                 <div className="flex gap-2 w-full justify-center items-center">
-                    <button type="button" className="text-white p-2" onClick={playPause} disabled={audioRef.current?.src != undefined}>
+                    <button type="button" className="text-white p-2" onClick={playPause} disabled={audioRef.current?.src === undefined}>
                         {playing? "Pause" : "Play"}
                     </button>
                 </div>
