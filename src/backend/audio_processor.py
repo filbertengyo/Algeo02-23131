@@ -3,8 +3,8 @@ from audio_preprocessor import AudioPreprocessor as prep
 
 class AudioProcessor:
     def __init__(self):
-        self.window_size = 10
-        self.slide = 1
+        self.window_size = 20
+        self.slide = 4
 
     @staticmethod
     def pitch_normalization(notes):
@@ -72,10 +72,16 @@ class AudioProcessor:
         audio_list = prep.load_mapper(map_folder_path)
 
         input_normalized = self.pitch_normalization(self.getNotes(prep.extract_midi(input_file_path)))
+        input_windows = self.windowing(input_normalized)
 
-        input_atb = self.absolute_tone_based(input_normalized)
-        input_rtb = self.relative_tone_based(input_normalized)
-        input_ftb = self.first_tone_based(input_normalized)
+        input_atb = []
+        input_rtb = []
+        input_ftb = []
+
+        for window in input_windows:
+            input_atb.append(self.absolute_tone_based(window))
+            input_rtb.append(self.relative_tone_based(window))
+            input_ftb.append(self.first_tone_based(window))
 
         similarities = {}
 
@@ -99,13 +105,14 @@ class AudioProcessor:
 
             # Lakukan perhitungan similarity untuk setiap window
             for audio_win_atb, audio_win_rtb, audio_win_ftb in zip(audio_atb, audio_rtb, audio_ftb):
-                similarity_atb = self.calculate_similarity(input_atb, audio_win_atb)
-                similarity_rtb = self.calculate_similarity(input_rtb, audio_win_rtb)
-                similarity_ftb = self.calculate_similarity(input_ftb, audio_win_ftb)
+                for input_win_atb, input_win_rtb, input_win_ftb in zip(input_atb, input_rtb, input_ftb):
+                    similarity_atb = self.calculate_similarity(input_win_atb, audio_win_atb)
+                    similarity_rtb = self.calculate_similarity(input_win_rtb, audio_win_rtb)
+                    similarity_ftb = self.calculate_similarity(input_win_ftb, audio_win_ftb)
 
-                # Ambil nilai maksimum dari tiga similarity fitur
-                similarity_value = (similarity_atb + similarity_rtb + similarity_ftb) / 3
-                best_similarity = max(best_similarity, similarity_value)
+                    # Ambil nilai maksimum dari tiga similarity fitur
+                    similarity_value = (similarity_atb + similarity_rtb + similarity_ftb) / 3
+                    best_similarity = max(best_similarity, similarity_value)
 
             # Simpan hasil similarity terbaik untuk audio
             similarities[audio] = best_similarity
@@ -121,7 +128,7 @@ class AudioProcessor:
 
 # my personal test
 # audio_processor = AudioProcessor()
-# input_file_path = './audio_3.midi'
+# input_file_path = './audio_1.midi'
 # audiodb_folder_path = './audio_db'
 # map_folder_path = './mapper'
 
