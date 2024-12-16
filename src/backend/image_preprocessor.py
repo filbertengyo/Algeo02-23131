@@ -139,7 +139,7 @@ class ImagePreprocessor:
         filepath = os.path.join(self.directory, "imgaverage.apdat")
         if os.path.exists(filepath): os.remove(filepath)
 
-    def getDataAverage(self) -> list[float]:
+    def getDataAverage(self) -> list[float]: #mean
         '''Retrieves the average pixel data form the average pixel data file (.apdat) within the preprocessor's working directory.'''
 
         filepath = os.path.join(self.directory, "imgaverage.apdat")
