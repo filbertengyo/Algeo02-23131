@@ -52,7 +52,7 @@ export default function Body({ query, musicCallback, className, result }: BodyPr
         if (pageOffset === 0) {
             if (result) {
                 GetQueryResult(0, pageSize).then((res) => {setMusicList(res)})
-                GetMusicCount().then((res) => {musicCountRef.current = res})
+                GetMusicCount("").then((res) => {musicCountRef.current = res})
             } else {
                 GetMusicList(query || "", 0, pageSize).then((res) => {setMusicList(res)})
                 GetMusicCount(query || "").then((res) => {musicCountRef.current = res})
@@ -63,7 +63,7 @@ export default function Body({ query, musicCallback, className, result }: BodyPr
     useEffect(() => {
         if (result) {
             GetQueryResult(0, pageSize).then((res) => {setMusicList(res)})
-            GetMusicCount().then((res) => {musicCountRef.current = res})
+            GetMusicCount("").then((res) => {musicCountRef.current = res})
         } else {
             GetMusicList(query || "", 0, pageSize).then((res) => {setMusicList(res)})
             GetMusicCount(query || "").then((res) => {musicCountRef.current = res})

@@ -10,11 +10,15 @@ class AudioPreprocessor:
 
         for track in midi_file.tracks:
             for msg in track:
-                if msg.type in ['note_on', 'note_off'] and msg.channel == 0:
+                if msg.type in ['note_on', 'note_off']:
                     channel_1_data.append({
                         'note': msg.note,
                         'time': msg.time
                     })
+                
+            if len(channel_1_data) > 0:
+                break
+
         return channel_1_data
     
     # Fungsi untuk memuat mapper.json

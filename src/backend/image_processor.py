@@ -3,7 +3,7 @@ import json
 import numpy as np
 import time
 from PIL import Image
-from backend.image_preprocessor import ImagePreprocessor
+from image_preprocessor import ImagePreprocessor
 
 class ImageProcessor(ImagePreprocessor):
     '''Performs PCA with SVD and similarity calculation for images.'''
@@ -28,8 +28,8 @@ class ImageProcessor(ImagePreprocessor):
         self.generateDataAverageFile()
         self.generateNormalizedDataFiles()
 
-        for filename, _ in self.mapper.items():
-            normalized_data = self.getNormalizedData(self._strip_extension(filename))
+        for filename in [item['pic_name'] for item in self.mapper]:
+            normalized_data = self.getNormalizedData(filename)
             all_data.append(normalized_data)
 
         X = np.array(all_data)
@@ -44,23 +44,19 @@ class ImageProcessor(ImagePreprocessor):
         '''Search for the most similar images to the given file and return the duration.'''
         query_name = os.path.basename(filepath)
         self.generateRawImageDataFile(filepath)
-        self.generateNormalizedDataFile(self._strip_extension(query_name))
-        query_data = self.getNormalizedData(self._strip_extension(query_name))
+        self.generateNormalizedDataFile(query_name)
+        query_data = self.getNormalizedData(query_name)
 
         query_projection = np.dot(query_data - self.mean_vector, self.U_k)
 
         distances = []
-        for i, (filename, _) in enumerate(self.mapper.items()):
+        for i, filename in enumerate([item['pic_name'] for item in self.mapper]):
             distance = np.linalg.norm(query_projection - self.Z[i])
             distances.append((filename, distance))
 
         distances.sort(key=lambda x: x[1])
 
-        for filename, distance in distances[:5]:
+        for filename, distance in distances:
             print(f"{filename}: Jarak = {distance:.4f}")
 
-        return distances[:5]
-
-    def _strip_extension(self, filename: str):
-        '''Remove the file extension for normalized data processing.'''
-        return os.path.splitext(filename)[0]
+        return distances
