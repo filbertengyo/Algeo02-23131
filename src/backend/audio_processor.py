@@ -111,7 +111,7 @@ class AudioProcessor:
                     similarity_ftb = self.calculate_similarity(input_win_ftb, audio_win_ftb)
 
                     # Ambil nilai maksimum dari tiga similarity fitur
-                    similarity_value = (similarity_atb + similarity_rtb + similarity_ftb) / 3
+                    similarity_value = (0.5 * similarity_atb) + (0.3 * similarity_rtb) + (0.2 * similarity_ftb)
                     best_similarity = max(best_similarity, similarity_value)
 
             # Simpan hasil similarity terbaik untuk audio
